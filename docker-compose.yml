@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:${PG_VERSION:-17}
+    environment:
+      POSTGRES_DB: pg_set_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 2s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432"
+
+  tests:
+    build:
+      context: .
+      dockerfile: Dockerfile.test
+    environment:
+      POSTGRES_DB: pg_set_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: "5432"
+      DJANGO_VERSION: ${DJANGO_VERSION:-5.2}
+      BACKEND: ${BACKEND:-psycopg3}
+    depends_on:
+      postgres:
+        condition: service_healthy

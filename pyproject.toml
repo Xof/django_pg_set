@@ -1,0 +1,68 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "django-pg-set"
+version = "0.1.0"
+description = "Temporarily SET PostgreSQL GUCs within a Django scope"
+readme = "README.md"
+license = "PostgreSQL"
+requires-python = ">=3.10"
+authors = [
+    { name = "Christophe Pettus", email = "xof@thebuild.com" },
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Framework :: Django",
+    "Framework :: Django :: 4.2",
+    "Framework :: Django :: 5.2",
+    "Framework :: Django :: 6.0",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Database",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "django>=4.2",
+]
+
+[project.optional-dependencies]
+psycopg2 = ["psycopg2"]
+psycopg3 = ["psycopg[binary]"]
+
+[project.urls]
+Homepage = "https://github.com/Xof/django-pg-set"
+Repository = "https://github.com/Xof/django-pg-set"
+Issues = "https://github.com/Xof/django-pg-set/issues"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "pytest-django>=4.5",
+    "psycopg2-binary>=2.9",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/pg_set_django"]
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+    "/.claude/",
+    "/.github/",
+    "/Dockerfile.test",
+    "/docker-compose.yml",
+    "/docker-entrypoint.sh",
+    "/test-matrix.sh",
+    "/tests/",
+    "/uv.lock",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "tests.django_settings"
+pythonpath = ["src", "."]
