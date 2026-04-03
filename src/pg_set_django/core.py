@@ -1,17 +1,23 @@
+from __future__ import annotations
+
 import functools
 import warnings
+from collections.abc import Callable, Generator, Iterable
 from contextlib import contextmanager
+from typing import Any
 
 from django.db import connections, transaction
 
 
 @contextmanager
-def _pg_set_context(settings, using):
+def _pg_set_context(
+    settings: list[tuple[str, str]], using: str
+) -> Generator[None, None, None]:
     """Core context manager: SET each GUC, yield, then RESET each."""
     conn = connections[using]
     conn.ensure_connection()
 
-    applied = []
+    applied: list[str] = []
     try:
         with conn.cursor() as cursor:
             for name, value in settings:
@@ -31,7 +37,7 @@ def _pg_set_context(settings, using):
                     )
 
 
-def _normalize_settings(args):
+def _normalize_settings(args: tuple[Any, ...]) -> list[tuple[str, str]]:
     """Normalize the flexible call signatures into a list of (name, value) tuples.
 
     Accepts:
@@ -56,27 +62,31 @@ def _normalize_settings(args):
 class _PgSet:
     """Decorator / context manager that temporarily SETs PostgreSQL GUCs."""
 
-    def __init__(self, *args, using="default"):
+    def __init__(
+        self,
+        *args: str | Iterable[tuple[str, str]],
+        using: str = "default",
+    ) -> None:
         self._settings = _normalize_settings(args)
         self._using = using
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self._cm = _pg_set_context(self._settings, self._using)
         return self._cm.__enter__()
 
-    def __exit__(self, *exc_info):
-        return self._cm.__exit__(*exc_info)
+    def __exit__(self, *exc_info: object) -> bool | None:
+        return self._cm.__exit__(*exc_info)  # type: ignore[arg-type]
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with _pg_set_context(self._settings, self._using):
                 return func(*args, **kwargs)
 
         return wrapper
 
 
-def pg_set(*args, **kwargs):
+def pg_set(*args: str | Iterable[tuple[str, str]], **kwargs: Any) -> _PgSet:
     """Temporarily SET PostgreSQL GUCs within a scope.
 
     Usage:
@@ -101,7 +111,9 @@ def pg_set(*args, **kwargs):
 
 
 @contextmanager
-def _atomic_set_context(settings, using):
+def _atomic_set_context(
+    settings: list[tuple[str, str]], using: str
+) -> Generator[None, None, None]:
     """Core context manager: atomic() + SET LOCAL each GUC."""
     conn = connections[using]
     with transaction.atomic(using=using):
@@ -115,27 +127,31 @@ def _atomic_set_context(settings, using):
 class _AtomicSet:
     """Decorator / context manager that wraps atomic() with SET LOCAL GUCs."""
 
-    def __init__(self, *args, using="default"):
+    def __init__(
+        self,
+        *args: str | Iterable[tuple[str, str]],
+        using: str = "default",
+    ) -> None:
         self._settings = _normalize_settings(args)
         self._using = using
 
-    def __enter__(self):
+    def __enter__(self) -> None:
         self._cm = _atomic_set_context(self._settings, self._using)
         return self._cm.__enter__()
 
-    def __exit__(self, *exc_info):
-        return self._cm.__exit__(*exc_info)
+    def __exit__(self, *exc_info: object) -> bool | None:
+        return self._cm.__exit__(*exc_info)  # type: ignore[arg-type]
 
-    def __call__(self, func):
+    def __call__(self, func: Callable[..., Any]) -> Callable[..., Any]:
         @functools.wraps(func)
-        def wrapper(*args, **kwargs):
+        def wrapper(*args: Any, **kwargs: Any) -> Any:
             with _atomic_set_context(self._settings, self._using):
                 return func(*args, **kwargs)
 
         return wrapper
 
 
-def atomic_set(*args, **kwargs):
+def atomic_set(*args: str | Iterable[tuple[str, str]], **kwargs: Any) -> _AtomicSet:
     """Wrap a scope in atomic() with SET LOCAL for PostgreSQL GUCs.
 
     The GUCs are automatically reverted when the transaction ends —

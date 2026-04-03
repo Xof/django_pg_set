@@ -1,6 +1,37 @@
+# Python
+*.py[cod]
 __pycache__/
-*.pyc
+*.so
+*.egg
 *.egg-info/
 dist/
+build/
+.eggs/
+
+# Virtual environments
 .venv/
+venv/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+
+# Testing
+.coverage
 .pytest_cache/
+htmlcov/
+.tox/
+.mypy_cache/
+
+# uv
+uv.lock
+
+# Claude-related
+.claude
+CLAUDE.md
+superpowers

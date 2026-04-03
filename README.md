@@ -38,9 +38,7 @@ def my_view(request):
     ...
 ```
 
-On exit, `pg_set` issues `RESET <name>` for each GUC, restoring it to the
-server's configured default. If a `RESET` fails, a `RuntimeWarning` is emitted
-and cleanup continues.
+On exit, `pg_set` issues `RESET <name>` for each GUC, restoring it to the server's configured default. If a `RESET` fails, a `RuntimeWarning` is emitted and cleanup continues.
 
 ### `atomic_set` — transaction-level SET LOCAL
 
@@ -61,9 +59,9 @@ def my_view(request):
     ...
 ```
 
-`atomic_set` opens a transaction via Django's `atomic()` and issues
-`SET LOCAL` for each GUC. The settings automatically revert when the
-transaction commits or rolls back — no explicit `RESET` is needed.
+`atomic_set` opens a transaction via Django's `atomic()` and issues`SET LOCAL` for each GUC. The settings automatically revert when the transaction commits or rolls back — no explicit `RESET` is needed.
+
+Note that this takes no pains to ensure you are running on a PostgreSQL backend.
 
 ## Parameters
 

@@ -1,5 +1,3 @@
-import warnings
-
 import pytest
 from django.db import connections
 
@@ -44,16 +42,17 @@ class TestContextManager:
 
     def test_reset_on_exception(self):
         original = _show("work_mem")
-        with pytest.raises(RuntimeError):
-            with pg_set("work_mem", "1MB"):
-                assert _show("work_mem") == "1MB"
-                raise RuntimeError("boom")
+        with pytest.raises(RuntimeError), pg_set("work_mem", "1MB"):
+            assert _show("work_mem") == "1MB"
+            raise RuntimeError("boom")
         assert _show("work_mem") == original
 
     def test_invalid_guc_raises(self):
-        with pytest.raises(Exception):
-            with pg_set("not_a_real_guc", "whatever"):
-                pass
+        with (
+            pytest.raises(Exception, match="not_a_real_guc"),
+            pg_set("not_a_real_guc", "whatever"),
+        ):
+            pass
 
     def test_yields_none(self):
         with pg_set("work_mem", "1MB") as result:
@@ -155,16 +154,17 @@ class TestAtomicSetContextManager:
 
     def test_reverts_on_exception(self):
         original = _show("work_mem")
-        with pytest.raises(RuntimeError):
-            with atomic_set("work_mem", "1MB"):
-                assert _show("work_mem") == "1MB"
-                raise RuntimeError("boom")
+        with pytest.raises(RuntimeError), atomic_set("work_mem", "1MB"):
+            assert _show("work_mem") == "1MB"
+            raise RuntimeError("boom")
         assert _show("work_mem") == original
 
     def test_invalid_guc_raises(self):
-        with pytest.raises(Exception):
-            with atomic_set("not_a_real_guc", "whatever"):
-                pass
+        with (
+            pytest.raises(Exception, match="not_a_real_guc"),
+            atomic_set("not_a_real_guc", "whatever"),
+        ):
+            pass
 
     def test_yields_none(self):
         with atomic_set("work_mem", "1MB") as result:
